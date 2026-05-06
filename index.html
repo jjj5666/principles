@@ -777,8 +777,8 @@ const STAGES=[
   {from:0, to:4,  name:'黄色',              short:'黄色',     sub:'首次觉醒',  color:'#c09331', bg:'rgba(192,147,49,.12)'},
   {from:4, to:8,  name:'绿色 · Good',        short:'绿色',     sub:'稳定出力',  color:'#5d9060', bg:'rgba(93,144,96,.12)'},
   {from:8, to:12, name:'紫色 · Excellent',   short:'紫色',     sub:'卓越表现',  color:'#876ab0', bg:'rgba(135,106,176,.14)'},
-  {from:12,to:18, name:'金色 · Great',       short:'金色',     sub:'罕见时刻',  color:'#d4a017', bg:'rgba(212,160,23,.14)'},
-  {from:18,to:22, name:'黑色 · Elon Musk',   short:'黑色',     sub:'传奇一日',  color:'#1a1612', bg:'rgba(0,0,0,.14)'},
+  {from:12,to:16, name:'金色 · Great',       short:'金色',     sub:'罕见时刻',  color:'#d4a017', bg:'rgba(212,160,23,.14)'},
+  {from:16,to:22, name:'黑色 · Elon Musk',   short:'黑色',     sub:'传奇一日',  color:'#1a1612', bg:'rgba(0,0,0,.14)'},
 ];
 const RING_C=2*Math.PI*108;
 const $=id=>document.getElementById(id);
@@ -798,7 +798,7 @@ function nextGoal(n){
 }
 function heroClass(n){
   if(n>=22) return 'onyx';
-  if(n>=18) return 'gold';
+  if(n>=16) return 'gold';
   if(n>=4)  return 'bronze';
   if(n>=1)  return '';
   return 'zero';
