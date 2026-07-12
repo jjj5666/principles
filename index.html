@@ -264,17 +264,6 @@ b,.hi{font-weight:600}
 .sync:hover{background:var(--spark-bg);color:var(--spark);border-color:var(--spark-border)}
 .sync.connected{color:var(--green-text);background:var(--green-bg);border-color:transparent}
 .sync.error{color:var(--red-text);background:var(--red-bg);border-color:var(--red)}
-.sync-phone{background:var(--card);border:1px solid var(--spark-border);border-radius:20px;padding:8px 15px;font-size:11.5px;color:var(--spark);cursor:pointer;transition:all .2s;font-family:inherit;font-weight:600;letter-spacing:.02em;display:none}
-.sync-phone:hover{background:var(--spark-bg)}
-.sync-phone.show{display:inline-block}
-
-/* phone-link modal bits */
-.linkbox{background:var(--card2);border:1px dashed var(--spark-border);border-radius:var(--radius-xs);padding:11px 13px;font-family:ui-monospace,SFMono-Regular,monospace;font-size:11px;color:var(--text2);word-break:break-all;line-height:1.6;margin-bottom:14px;text-align:left;max-height:76px;overflow:auto}
-.md-steps{text-align:left;font-size:12.5px;color:var(--text2);line-height:1.85;margin:0 0 16px;padding-left:22px}
-.md-steps b{color:var(--text)}
-.md-reset{margin-top:14px;font-size:11px;color:var(--text3);background:none;border:none;cursor:pointer;font-family:inherit;text-decoration:underline;text-underline-offset:3px}
-.md-reset:hover{color:var(--red-text)}
-
 /* toast */
 .toast{position:fixed;left:50%;bottom:calc(var(--nav-h) + env(safe-area-inset-bottom,0px) + 18px);transform:translateX(-50%) translateY(20px);background:var(--text);color:var(--bg);padding:11px 20px;border-radius:22px;font-size:13px;font-weight:500;z-index:2000;opacity:0;pointer-events:none;transition:all .35s cubic-bezier(.34,1.2,.64,1);box-shadow:0 8px 30px rgba(0,0,0,.25);max-width:86vw;text-align:center}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
@@ -522,8 +511,7 @@ footer::before{content:'✦';display:block;color:var(--spark);opacity:.4;font-si
     </div>
 
     <div class="sync-wrap">
-      <button class="sync" id="sync">☁️ 未连接 · 点击设置云同步</button>
-      <button class="sync-phone" id="syncphone">📱 连接手机</button>
+      <button class="sync" id="sync" title="点击立即同步">⟳ 连接云同步…</button>
     </div>
 
     <div class="cd">
@@ -797,44 +785,6 @@ footer::before{content:'✦';display:block;color:var(--spark);opacity:.4;font-si
       <button class="btn btn-g" id="bno">否</button>
       <button class="btn btn-p" id="byes">是</button>
     </div>
-  </div>
-</div>
-
-<div class="md" id="tokenmd" role="dialog" aria-modal="true">
-  <div class="md-b" style="max-width:460px">
-    <div class="md-ic">☁️</div>
-    <div class="md-q">连接云同步</div>
-    <div class="md-h">数据自动同步到 GitHub Gist · 手机电脑共用 · 永不丢失</div>
-    <ol style="text-align:left;font-size:12.5px;color:var(--text2);line-height:1.85;margin:0 0 18px;padding-left:22px">
-      <li><a href="https://github.com/settings/tokens/new?scopes=gist&amp;description=Principles%20Sync" target="_blank" rel="noopener" style="color:var(--spark);text-decoration:none;border-bottom:1px solid var(--spark-border);font-weight:500">点这里打开 GitHub 创建 token</a> · scope 已自动勾好 gist · Expiration 选 No expiration</li>
-      <li>页面底部点 <b>Generate token</b> · 复制生成的 token(<code style="font-family:ui-monospace,monospace;font-size:11.5px;color:var(--text)">ghp_...</code>)</li>
-      <li>粘贴到下面 → 保存(之后永远不用再管)</li>
-    </ol>
-    <input id="tokeninp" type="password" placeholder="粘贴 token..." autocomplete="off" spellcheck="false" autocapitalize="off"
-      style="width:100%;padding:13px 14px;border:1px solid var(--border);border-radius:var(--radius-xs);background:var(--card2);color:var(--text);font-family:ui-monospace,SFMono-Regular,monospace;font-size:13px;margin-bottom:18px;outline:none;letter-spacing:.02em">
-    <div class="md-a">
-      <button class="btn btn-g" id="btokencancel">取消</button>
-      <button class="btn btn-p" id="btokensave">保存并连接</button>
-    </div>
-  </div>
-</div>
-
-<div class="md" id="phonemd" role="dialog" aria-modal="true">
-  <div class="md-b" style="max-width:440px">
-    <div class="md-ic">📱</div>
-    <div class="md-q">连接手机 · 一次搞定</div>
-    <div class="md-h">手机点开这个链接,云同步自动连接,之后永久互通</div>
-    <div class="linkbox" id="phonelink">--</div>
-    <ol class="md-steps">
-      <li>链接已复制,用 <b>AirDrop</b> 或 <b>微信「文件传输助手」</b>发到手机</li>
-      <li>手机上<b>点开链接</b> → 自动连接,完成</li>
-      <li>顺手 Safari <b>分享 → 添加到主屏幕</b>,以后当 App 用</li>
-    </ol>
-    <div class="md-a">
-      <button class="btn btn-g" id="bphoneclose">关闭</button>
-      <button class="btn btn-p" id="bphonecopy">再复制一次</button>
-    </div>
-    <button class="md-reset" id="bphonereset">重置 / 更换 token</button>
   </div>
 </div>
 
@@ -1325,14 +1275,12 @@ function celebrate(n,up){
   }
 }
 
-/* ═══════════ GitHub Gist cloud sync (same protocol & data as v1) ═══════════ */
-const GIST_ID='2450ab759222ffcbfb70bfb94d208e5b';
-const GIST_FILE='data.json';
-const TOKEN_KEY='gh_token';
+/* ═══════════ auto cloud sync — no login, no setup ═══════════
+   Shared JSON bin (npoint). The bin id lives in this file, so every
+   device that opens this site reads/writes the same data. Local
+   localStorage always keeps a full copy — the bin is only a bridge. */
+const SYNC_URL='https://api.npoint.io/bdff9f51df24bad38e16';
 let SYNC_STATE='none',SYNC_TIMER=null,lastPullT=0;
-
-function getToken(){return localStorage.getItem(TOKEN_KEY)||''}
-function setTokenV(t){localStorage.setItem(TOKEN_KEY,t.trim())}
 
 function collectData(){
   const days={};
@@ -1354,37 +1302,31 @@ function mergeData(a,b){
   const last=[a.last,b.last].filter(Boolean).sort().pop()||null;
   return{version:1,days,streak:Math.max(+(a.streak||0),+(b.streak||0)),last};
 }
-async function gistFetch(){
-  const t=getToken();if(!t)throw new Error('no-token');
-  const r=await fetch(`https://api.github.com/gists/${GIST_ID}`,{
-    headers:{Authorization:`token ${t}`,Accept:'application/vnd.github+json'},cache:'no-store'
-  });
+async function cloudFetch(){
+  const r=await fetch(SYNC_URL,{cache:'no-store'});
   if(!r.ok)throw new Error('fetch-'+r.status);
   const j=await r.json();
-  const c=j.files?.[GIST_FILE]?.content;
-  return c?JSON.parse(c):{version:1,days:{},streak:0,last:null};
+  return (j&&typeof j==='object')?{version:1,days:j.days||{},streak:+(j.streak||0),last:j.last||null}:{version:1,days:{},streak:0,last:null};
 }
-async function gistWrite(data){
-  const t=getToken();if(!t)throw new Error('no-token');
-  const r=await fetch(`https://api.github.com/gists/${GIST_ID}`,{
-    method:'PATCH',
-    headers:{Authorization:`token ${t}`,Accept:'application/vnd.github+json','Content-Type':'application/json'},
-    body:JSON.stringify({files:{[GIST_FILE]:{content:JSON.stringify(data,null,2)}}})
+async function cloudWrite(data){
+  const r=await fetch(SYNC_URL,{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify(data)
   });
   if(!r.ok)throw new Error('write-'+r.status);
 }
 function rSync(){
   const el=$('sync');
   const map={
-    none:['','☁️ 未连接 · 点击设置云同步'],
+    none:['','⟳ 连接云同步…'],
     syncing:['','⟳ 同步中…'],
-    connected:['connected','✓ 云同步已连接'],
-    error:['error','⚠️ 同步出错 · 点击重连'],
+    connected:['connected','✓ 已同步 · 手机电脑自动互通'],
+    error:['error','⚠️ 离线 · 数据已存本机,点击重试'],
   };
   const[cls,txt]=map[SYNC_STATE]||map.none;
   el.className='sync '+cls;
   el.textContent=txt;
-  $('syncphone').classList.toggle('show',SYNC_STATE==='connected');
 }
 
 /* ═══ toast ═══ */
@@ -1397,47 +1339,15 @@ function toast(msg,ms){
   TOAST_T=setTimeout(()=>t.classList.remove('show'),ms||2600);
 }
 
-/* ═══ phone hand-off: share sync via #sync= link ═══ */
-function phoneLink(){
-  return location.origin+location.pathname+'#sync='+encodeURIComponent(getToken());
-}
-async function copyPhoneLink(){
-  const url=phoneLink();
-  try{await navigator.clipboard.writeText(url);toast('链接已复制 · 发到手机点开即可')}
-  catch(e){
-    try{
-      const inp=document.createElement('textarea');
-      inp.value=url;document.body.appendChild(inp);inp.select();
-      document.execCommand('copy');inp.remove();
-      toast('链接已复制 · 发到手机点开即可');
-    }catch(e2){toast('复制失败,请长按上方链接手动复制')}
-  }
-}
-function openPhoneLink(){
-  $('phonelink').textContent=phoneLink();
-  $('phonemd').classList.add('show');
-  copyPhoneLink();
-}
-function closePhoneLink(){$('phonemd').classList.remove('show')}
-
-/* incoming #sync=TOKEN — auto-connect on this device */
-function handleSyncHash(){
-  const m=location.hash.match(/^#sync=(.+)$/);
-  if(!m)return false;
-  const tok=decodeURIComponent(m[1]).trim();
-  history.replaceState(null,'',location.pathname+location.search);
-  if(!tok)return false;
-  setTokenV(tok);
-  toast('✓ 云同步已自动连接 · 手机电脑互通',3400);
-  return true;
-}
+/* legacy cleanup: gh_token from the old Gist-sync flow is no longer used */
+try{localStorage.removeItem('gh_token')}catch(e){}
 async function doSync(){
   SYNC_STATE='syncing';rSync();
   try{
-    const remote=await gistFetch();
+    const remote=await cloudFetch();
     const merged=mergeData(collectData(),remote);
     applyData(merged);
-    await gistWrite(merged);
+    await cloudWrite(merged);
     lastPullT=Date.now();
     SYNC_STATE='connected';rSync();rStars();rTimer();
   }catch(e){
@@ -1445,34 +1355,10 @@ async function doSync(){
     SYNC_STATE='error';rSync();
   }
 }
-async function initSync(){
-  if(!getToken()){SYNC_STATE='none';rSync();return}
-  await doSync();
-}
+async function initSync(){await doSync()}
 function syncAfterChange(){
-  if(!getToken())return;
   clearTimeout(SYNC_TIMER);
   SYNC_TIMER=setTimeout(doSync,800);
-}
-function openTokenSetup(){
-  if(SYNC_STATE==='connected'){openPhoneLink();return}
-  $('tokeninp').value=getToken();
-  $('tokenmd').classList.add('show');
-  setTimeout(()=>$('tokeninp').focus(),120);
-}
-function resetToken(){
-  closePhoneLink();
-  $('tokeninp').value=getToken();
-  $('tokenmd').classList.add('show');
-  setTimeout(()=>$('tokeninp').focus(),120);
-}
-function closeTokenSetup(){$('tokenmd').classList.remove('show')}
-async function saveToken(){
-  const v=$('tokeninp').value.trim();
-  if(!v){alert('请粘贴 GitHub token');return}
-  setTokenV(v);
-  closeTokenSetup();
-  await initSync();
 }
 
 /* ═══════════ events ═══════════ */
@@ -1483,23 +1369,14 @@ $('bcancel').addEventListener('click',cancelFocus);
 $('bmanual').addEventListener('click',()=>askEval(true));
 $('byes').addEventListener('click',evalYes);
 $('bno').addEventListener('click',evalNo);
-$('sync').addEventListener('click',openTokenSetup);
-$('syncphone').addEventListener('click',openPhoneLink);
-$('btokencancel').addEventListener('click',closeTokenSetup);
-$('btokensave').addEventListener('click',saveToken);
-$('bphoneclose').addEventListener('click',closePhoneLink);
-$('bphonecopy').addEventListener('click',copyPhoneLink);
-$('bphonereset').addEventListener('click',resetToken);
+$('sync').addEventListener('click',()=>{if(SYNC_STATE!=='syncing')doSync()});
 $('cb').addEventListener('click',()=>$('cb').classList.remove('show'));
 
 document.addEventListener('keydown',e=>{
-  if(e.key==='Enter'&&$('tokenmd').classList.contains('show'))saveToken();
   if(e.key==='Escape'){
-    if($('tokenmd').classList.contains('show'))closeTokenSetup();
-    if($('phonemd').classList.contains('show'))closePhoneLink();
     if($('evalmd').classList.contains('show'))evalNo();
   }
-  if(e.key===' '&&CUR==='today'&&!$('evalmd').classList.contains('show')&&!$('tokenmd').classList.contains('show')){
+  if(e.key===' '&&CUR==='today'&&!$('evalmd').classList.contains('show')){
     const tag=(document.activeElement&&document.activeElement.tagName)||'';
     if(tag==='INPUT'||tag==='TEXTAREA'||tag==='BUTTON')return;
     e.preventDefault();
@@ -1518,19 +1395,15 @@ document.addEventListener('visibilitychange',()=>{
         TS='idle';saveTimer();relWake();finishChime();rTimer();askEval();
       }else{rTimer();reqWake()}
     }
-    if(getToken()&&SYNC_STATE!=='syncing'&&Date.now()-lastPullT>30000)initSync();
+    if(SYNC_STATE!=='syncing'&&Date.now()-lastPullT>30000)initSync();
   }
 });
-
-/* late sync link while page already open */
-window.addEventListener('hashchange',()=>{if(handleSyncHash())initSync()});
 
 /* midnight rollover */
 let lastDay=ds(0);
 setInterval(()=>{if(ds(0)!==lastDay){lastDay=ds(0);rStars();rTimer()}},30000);
 
 /* ═══════════ boot ═══════════ */
-handleSyncHash();
 tick();setInterval(tick,10000);
 loadTimer();
 rStars();rTimer();
