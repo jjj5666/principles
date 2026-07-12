@@ -259,11 +259,26 @@ b,.hi{font-weight:600}
 .how-note{margin-top:10px;font-size:11.5px;color:var(--text3);text-align:center;letter-spacing:.03em}
 
 /* sync chip */
-.sync-wrap{text-align:center;margin:2px 0 13px}
+.sync-wrap{text-align:center;margin:2px 0 13px;display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
 .sync{background:var(--card);border:1px solid var(--border);border-radius:20px;padding:8px 15px;font-size:11.5px;color:var(--text3);cursor:pointer;transition:all .2s;font-family:inherit;letter-spacing:.02em}
 .sync:hover{background:var(--spark-bg);color:var(--spark);border-color:var(--spark-border)}
 .sync.connected{color:var(--green-text);background:var(--green-bg);border-color:transparent}
 .sync.error{color:var(--red-text);background:var(--red-bg);border-color:var(--red)}
+.sync-phone{background:var(--card);border:1px solid var(--spark-border);border-radius:20px;padding:8px 15px;font-size:11.5px;color:var(--spark);cursor:pointer;transition:all .2s;font-family:inherit;font-weight:600;letter-spacing:.02em;display:none}
+.sync-phone:hover{background:var(--spark-bg)}
+.sync-phone.show{display:inline-block}
+
+/* phone-link modal bits */
+.linkbox{background:var(--card2);border:1px dashed var(--spark-border);border-radius:var(--radius-xs);padding:11px 13px;font-family:ui-monospace,SFMono-Regular,monospace;font-size:11px;color:var(--text2);word-break:break-all;line-height:1.6;margin-bottom:14px;text-align:left;max-height:76px;overflow:auto}
+.md-steps{text-align:left;font-size:12.5px;color:var(--text2);line-height:1.85;margin:0 0 16px;padding-left:22px}
+.md-steps b{color:var(--text)}
+.md-reset{margin-top:14px;font-size:11px;color:var(--text3);background:none;border:none;cursor:pointer;font-family:inherit;text-decoration:underline;text-underline-offset:3px}
+.md-reset:hover{color:var(--red-text)}
+
+/* toast */
+.toast{position:fixed;left:50%;bottom:calc(var(--nav-h) + env(safe-area-inset-bottom,0px) + 18px);transform:translateX(-50%) translateY(20px);background:var(--text);color:var(--bg);padding:11px 20px;border-radius:22px;font-size:13px;font-weight:500;z-index:2000;opacity:0;pointer-events:none;transition:all .35s cubic-bezier(.34,1.2,.64,1);box-shadow:0 8px 30px rgba(0,0,0,.25);max-width:86vw;text-align:center}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+@media(min-width:760px){.toast{bottom:34px}}
 
 /* period stats */
 .per{display:flex;flex-direction:column;gap:7px}
@@ -508,6 +523,7 @@ footer::before{content:'✦';display:block;color:var(--spark);opacity:.4;font-si
 
     <div class="sync-wrap">
       <button class="sync" id="sync">☁️ 未连接 · 点击设置云同步</button>
+      <button class="sync-phone" id="syncphone">📱 连接手机</button>
     </div>
 
     <div class="cd">
@@ -802,6 +818,27 @@ footer::before{content:'✦';display:block;color:var(--spark);opacity:.4;font-si
     </div>
   </div>
 </div>
+
+<div class="md" id="phonemd" role="dialog" aria-modal="true">
+  <div class="md-b" style="max-width:440px">
+    <div class="md-ic">📱</div>
+    <div class="md-q">连接手机 · 一次搞定</div>
+    <div class="md-h">手机点开这个链接,云同步自动连接,之后永久互通</div>
+    <div class="linkbox" id="phonelink">--</div>
+    <ol class="md-steps">
+      <li>链接已复制,用 <b>AirDrop</b> 或 <b>微信「文件传输助手」</b>发到手机</li>
+      <li>手机上<b>点开链接</b> → 自动连接,完成</li>
+      <li>顺手 Safari <b>分享 → 添加到主屏幕</b>,以后当 App 用</li>
+    </ol>
+    <div class="md-a">
+      <button class="btn btn-g" id="bphoneclose">关闭</button>
+      <button class="btn btn-p" id="bphonecopy">再复制一次</button>
+    </div>
+    <button class="md-reset" id="bphonereset">重置 / 更换 token</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
 
 <script>
 'use strict';
@@ -1341,12 +1378,58 @@ function rSync(){
   const map={
     none:['','☁️ 未连接 · 点击设置云同步'],
     syncing:['','⟳ 同步中…'],
-    connected:['connected','✓ 云同步已连接 · 手机电脑共用'],
+    connected:['connected','✓ 云同步已连接'],
     error:['error','⚠️ 同步出错 · 点击重连'],
   };
   const[cls,txt]=map[SYNC_STATE]||map.none;
   el.className='sync '+cls;
   el.textContent=txt;
+  $('syncphone').classList.toggle('show',SYNC_STATE==='connected');
+}
+
+/* ═══ toast ═══ */
+let TOAST_T=null;
+function toast(msg,ms){
+  const t=$('toast');
+  t.textContent=msg;
+  t.classList.add('show');
+  clearTimeout(TOAST_T);
+  TOAST_T=setTimeout(()=>t.classList.remove('show'),ms||2600);
+}
+
+/* ═══ phone hand-off: share sync via #sync= link ═══ */
+function phoneLink(){
+  return location.origin+location.pathname+'#sync='+encodeURIComponent(getToken());
+}
+async function copyPhoneLink(){
+  const url=phoneLink();
+  try{await navigator.clipboard.writeText(url);toast('链接已复制 · 发到手机点开即可')}
+  catch(e){
+    try{
+      const inp=document.createElement('textarea');
+      inp.value=url;document.body.appendChild(inp);inp.select();
+      document.execCommand('copy');inp.remove();
+      toast('链接已复制 · 发到手机点开即可');
+    }catch(e2){toast('复制失败,请长按上方链接手动复制')}
+  }
+}
+function openPhoneLink(){
+  $('phonelink').textContent=phoneLink();
+  $('phonemd').classList.add('show');
+  copyPhoneLink();
+}
+function closePhoneLink(){$('phonemd').classList.remove('show')}
+
+/* incoming #sync=TOKEN — auto-connect on this device */
+function handleSyncHash(){
+  const m=location.hash.match(/^#sync=(.+)$/);
+  if(!m)return false;
+  const tok=decodeURIComponent(m[1]).trim();
+  history.replaceState(null,'',location.pathname+location.search);
+  if(!tok)return false;
+  setTokenV(tok);
+  toast('✓ 云同步已自动连接 · 手机电脑互通',3400);
+  return true;
 }
 async function doSync(){
   SYNC_STATE='syncing';rSync();
@@ -1372,7 +1455,13 @@ function syncAfterChange(){
   SYNC_TIMER=setTimeout(doSync,800);
 }
 function openTokenSetup(){
-  if(SYNC_STATE==='connected'&&!confirm('已连接云同步,是否要重置 token?'))return;
+  if(SYNC_STATE==='connected'){openPhoneLink();return}
+  $('tokeninp').value=getToken();
+  $('tokenmd').classList.add('show');
+  setTimeout(()=>$('tokeninp').focus(),120);
+}
+function resetToken(){
+  closePhoneLink();
   $('tokeninp').value=getToken();
   $('tokenmd').classList.add('show');
   setTimeout(()=>$('tokeninp').focus(),120);
@@ -1395,14 +1484,19 @@ $('bmanual').addEventListener('click',()=>askEval(true));
 $('byes').addEventListener('click',evalYes);
 $('bno').addEventListener('click',evalNo);
 $('sync').addEventListener('click',openTokenSetup);
+$('syncphone').addEventListener('click',openPhoneLink);
 $('btokencancel').addEventListener('click',closeTokenSetup);
 $('btokensave').addEventListener('click',saveToken);
+$('bphoneclose').addEventListener('click',closePhoneLink);
+$('bphonecopy').addEventListener('click',copyPhoneLink);
+$('bphonereset').addEventListener('click',resetToken);
 $('cb').addEventListener('click',()=>$('cb').classList.remove('show'));
 
 document.addEventListener('keydown',e=>{
   if(e.key==='Enter'&&$('tokenmd').classList.contains('show'))saveToken();
   if(e.key==='Escape'){
     if($('tokenmd').classList.contains('show'))closeTokenSetup();
+    if($('phonemd').classList.contains('show'))closePhoneLink();
     if($('evalmd').classList.contains('show'))evalNo();
   }
   if(e.key===' '&&CUR==='today'&&!$('evalmd').classList.contains('show')&&!$('tokenmd').classList.contains('show')){
@@ -1428,11 +1522,15 @@ document.addEventListener('visibilitychange',()=>{
   }
 });
 
+/* late sync link while page already open */
+window.addEventListener('hashchange',()=>{if(handleSyncHash())initSync()});
+
 /* midnight rollover */
 let lastDay=ds(0);
 setInterval(()=>{if(ds(0)!==lastDay){lastDay=ds(0);rStars();rTimer()}},30000);
 
 /* ═══════════ boot ═══════════ */
+handleSyncHash();
 tick();setInterval(tick,10000);
 loadTimer();
 rStars();rTimer();
@@ -1440,6 +1538,15 @@ initSync();
 
 if('serviceWorker' in navigator){
   window.addEventListener('load',()=>{navigator.serviceWorker.register('sw.js').catch(()=>{})});
+  /* an UPDATED worker took control → silently reload for freshness
+     (skip on very first install, and never interrupt a running focus session) */
+  const hadController=!!navigator.serviceWorker.controller;
+  let swReloaded=false;
+  navigator.serviceWorker.addEventListener('controllerchange',()=>{
+    if(!hadController||swReloaded)return;
+    swReloaded=true;
+    if(TS!=='running')location.reload();
+  });
 }
 </script>
 </body>
