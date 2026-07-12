@@ -6,7 +6,7 @@
 
 - `index.html` — 全部应用(单文件:今日仪表盘 / 原则清单 / 每日时间表 / 稳态检查)
 - `manifest.webmanifest` + `sw.js` + `icons/` — PWA:可安装到手机主屏幕,离线可用
-- 数据存 `localStorage`(键:`fc_d_YYYY-MM-DD`、`fc_streak`、`fc_last`、`gh_token`),可选 GitHub Gist 云同步(数据格式 `{version:1, days, streak, last}`,与 v1 完全兼容)
+- 数据存 `localStorage`(键:`fc_d_YYYY-MM-DD`、`fc_streak`、`fc_last`),打开页面即自动与共享云端桶双向同步(`SYNC_URL`,npoint.io,格式 `{version:1, days, streak, last}`)。桶只是同步桥,本机永远保有全量数据;桶失效时改 `SYNC_URL` 换新桶即可
 
 ## 发布更新
 
