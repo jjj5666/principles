@@ -185,6 +185,12 @@ b{font-weight:600;color:var(--text)}
 .hero-next .num{color:var(--ac-deep);font-family:var(--ff-serif);font-size:17px;margin:0 1px}
 .hero-next .chk{color:var(--text);font-weight:600;margin-right:4px}
 
+/* per-star lightweight feedback (full-screen celebration only on level-up) */
+.starfly{position:absolute;left:50%;top:34%;transform:translate(-50%,0);font-family:var(--ff-serif);font-size:22px;color:var(--ac-deep);pointer-events:none;z-index:5;animation:starfly .95s cubic-bezier(.22,1,.36,1) forwards}
+@keyframes starfly{0%{opacity:0;transform:translate(-50%,10px) scale(.75)}16%{opacity:1}100%{opacity:0;transform:translate(-50%,-52px) scale(1.06)}}
+.hero.bump .hero-num{animation:herobump .5s cubic-bezier(.34,1.4,.64,1)}
+@keyframes herobump{0%{transform:scale(1)}35%{transform:scale(1.07)}100%{transform:scale(1)}}
+
 /* tier road: one continuous 0→22 journey, segment widths ∝ star spans
    (tier colors live only here & celebration) */
 .road{margin-top:22px}
@@ -1146,11 +1152,16 @@ function evalYes(){
     localStorage.setItem('fc_last',ds(0));
   }
   const up=currentStage(prev).from!==currentStage(next).from;
-  celebrate(next,up);
-  if(navigator.vibrate){
-    const idx=Math.max(0,STAGES.indexOf(currentStage(next)));
-    const base=TIER_VIBE[idx]||TIER_VIBE[0];
-    navigator.vibrate(up?[...base,80,300]:base);
+  if(up||next>=22){
+    celebrate(next,up);
+    if(navigator.vibrate){
+      const idx=Math.max(0,STAGES.indexOf(currentStage(next)));
+      const base=TIER_VIBE[idx]||TIER_VIBE[0];
+      navigator.vibrate(up?[...base,80,300]:base);
+    }
+  }else{
+    miniStar();
+    if(navigator.vibrate)navigator.vibrate(40);
   }
   syncAfterChange();
   TR=FOCUS_SEC;
@@ -1169,6 +1180,17 @@ function animCnt(from,to){
     el.textContent=Math.round(from+(to-from)*e);
     if(t<1)requestAnimationFrame(u);
   })();
+}
+
+/* regular star: quiet nod — float +1, bump the number, road glides on */
+function miniStar(){
+  const hero=$('hero');
+  hero.classList.remove('bump');void hero.offsetWidth;hero.classList.add('bump');
+  const f=document.createElement('div');
+  f.className='starfly';f.textContent='+1 ✦';
+  hero.appendChild(f);
+  setTimeout(()=>f.remove(),1000);
+  setTimeout(()=>hero.classList.remove('bump'),560);
 }
 
 /* ═══════════ celebration ═══════════ */
