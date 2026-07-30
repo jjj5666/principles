@@ -191,6 +191,32 @@ b{font-weight:600;color:var(--text)}
 .hero.bump .hero-num{animation:herobump .5s cubic-bezier(.34,1.4,.64,1)}
 @keyframes herobump{0%{transform:scale(1)}35%{transform:scale(1.07)}100%{transform:scale(1)}}
 
+/* reward pool — hairline row inside hero */
+.pool{display:flex;align-items:center;gap:10px;margin-top:16px;padding-top:14px;border-top:1px solid var(--divider)}
+.pool-lbl{font-size:10px;font-weight:600;color:var(--text3);letter-spacing:.18em}
+.pool-bal{flex:1;text-align:left}
+.pool-bal b{font-family:var(--ff-serif);font-size:19px;font-weight:400;color:var(--text);font-variant-numeric:tabular-nums;letter-spacing:-.01em}
+.pool-bal b.flash{animation:poolflash .9s ease}
+@keyframes poolflash{0%{color:var(--ac-deep);transform:scale(1.12)}100%{color:var(--text);transform:scale(1)}}
+.pool-btn{font-size:12px;font-weight:600;color:var(--ac-deep);background:none;border:none;padding:6px 2px;cursor:pointer;font-family:inherit;letter-spacing:.04em}
+.pool-btn:active{opacity:.55}
+.pool.zero .pool-bal b{color:var(--text3)}
+
+/* spend sheet */
+.md-spend .md-h b{color:var(--ac-deep);font-size:15px;font-style:normal}
+.sp-chips{display:flex;gap:8px;justify-content:center;margin-bottom:12px}
+.sp-chip{padding:9px 0;flex:1;border:1px solid var(--border);border-radius:var(--radius-xs);background:var(--card2);color:var(--text2);font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;transition:all .2s}
+.sp-chip.on{border-color:var(--ac-border);background:var(--ac-bg);color:var(--ac-deep)}
+.sp-amt,.sp-note{width:100%;padding:11px 14px;border:1px solid var(--border);border-radius:var(--radius-xs);background:var(--card2);color:var(--text);font-size:16px;margin-bottom:10px;font-family:inherit;outline:none;box-sizing:border-box;text-align:center;transition:border-color .2s}
+.sp-amt:focus,.sp-note:focus{border-color:var(--ac-border)}
+.sp-note{text-align:left;font-size:15px}
+.sp-hist{margin:2px 0 16px;text-align:left}
+.sp-hist:empty{display:none;margin:0}
+.sp-hrow{display:flex;align-items:baseline;gap:10px;padding:7px 2px;border-top:1px solid var(--divider);font-size:12px;color:var(--text3)}
+.sp-hrow .d{flex-shrink:0;font-variant-numeric:tabular-nums}
+.sp-hrow .n{flex:1;color:var(--text2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sp-hrow .a{font-family:var(--ff-serif);color:var(--text);font-variant-numeric:tabular-nums}
+
 /* tier road: one continuous 0→22 journey, segment widths ∝ star spans
    (tier colors live only here & celebration) */
 .road{margin-top:22px}
@@ -454,6 +480,11 @@ footer::before{content:'✦';display:block;color:var(--ac);opacity:.4;font-size:
       </div>
       <div class="hero-next" id="next">距 <b class="tier">黄色</b> 还差 <b class="num">4</b> 颗</div>
       <div class="road" id="track"></div>
+      <div class="pool zero" id="pool">
+        <span class="pool-lbl">奖励池</span>
+        <span class="pool-bal"><b id="poolbal">0</b></span>
+        <button class="pool-btn" id="bspend">花一笔 ›</button>
+      </div>
     </div>
 
     <div class="tmr-wrap">
@@ -482,7 +513,7 @@ footer::before{content:'✦';display:block;color:var(--ac);opacity:.4;font-size:
       <div class="cd-t"><span class="no">✦</span><span class="tt">星星怎么来</span><span class="tr">每天从 0 开始</span></div>
       <div class="step"><span class="step-n">1</span><span class="step-t">按下 <b class="hi">开始</b>，全力以赴专注 <b>25 分钟</b>，做正确的事</span></div>
       <div class="step"><span class="step-n">2</span><span class="step-t">铃响后诚实自评：<b>是否全力以赴做了正确的事？</b></span></div>
-      <div class="step"><span class="step-n">3</span><span class="step-t">答「是」 → <b class="hi">+1 ✦</b>，段位随星数点亮：黄 4 → 绿 8 → 紫 12 → 金 16 → 黑 22</span></div>
+      <div class="step"><span class="step-n">3</span><span class="step-t">答「是」 → <b class="hi">+1 ✦</b>，段位随星数点亮：黄 4 → 绿 8 → 紫 12 → 金 16 → 黑 22；<b class="hi">黑色段每颗 +1000 入奖励池</b></span></div>
       <div class="how-extra">
         <span class="tx">离开电脑也全力做了正确的事？（开会 / 谈判 / 阅读…）</span>
         <button class="how-mb" id="bmanual">＋ 补一颗</button>
@@ -761,6 +792,27 @@ footer::before{content:'✦';display:block;color:var(--ac);opacity:.4;font-size:
   </div>
 </div>
 
+<div class="md" id="spendmd" role="dialog" aria-modal="true">
+  <div class="md-b md-spend">
+    <div class="md-ic">✦</div>
+    <div class="md-q">从奖励池花一笔</div>
+    <div class="md-h">当前库存 <b id="spbal">0</b> · 黑色段每颗星 +1000</div>
+    <div class="sp-chips" id="spchips">
+      <button class="sp-chip" data-amt="500">500</button>
+      <button class="sp-chip on" data-amt="1000">1000</button>
+      <button class="sp-chip" data-amt="2000">2000</button>
+      <button class="sp-chip" data-amt="all">全部</button>
+    </div>
+    <input class="sp-amt" id="spamt" type="number" inputmode="numeric" min="1" placeholder="自定义金额">
+    <input class="sp-note" id="spnote" type="text" maxlength="24" placeholder="备注（可选）· 奶茶 / 游戏 / 休息">
+    <div class="sp-hist" id="sphist"></div>
+    <div class="md-a">
+      <button class="btn btn-g" id="bspno">取消</button>
+      <button class="btn btn-p" id="bspyes">确认扣除</button>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script>
@@ -1010,6 +1062,54 @@ function rStars(){
   $('streak').textContent=streak;
 }
 
+/* ═══════════ reward pool ═══════════
+   earned: deterministic from daily stars — every star in the black zone
+   (a day's 16th→22nd star) banks +1000. spends sync via the bin. */
+const POOL_PER=1000,BLACK_FROM=16,STAR_CAP=22;
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+function getSpends(){try{const a=JSON.parse(localStorage.getItem('fc_spends')||'[]');return Array.isArray(a)?a:[]}catch(e){return[]}}
+function setSpends(a){localStorage.setItem('fc_spends',JSON.stringify(a))}
+function poolEarned(){let e=0;iterDaily((d,v)=>{e+=Math.max(0,Math.min(v,STAR_CAP)-BLACK_FROM+1)*POOL_PER});return e}
+function poolBal(){return poolEarned()-getSpends().reduce((a,s)=>a+(+s.amt||0),0)}
+function fmtN(n){return(+n).toLocaleString('en-US')}
+function rPool(anim){
+  const b=poolBal(),el=$('poolbal');
+  $('pool').classList.toggle('zero',b<=0);
+  if(anim){el.classList.remove('flash');void el.offsetWidth;el.classList.add('flash')}
+  el.textContent=fmtN(b);
+}
+
+/* spend sheet */
+let spAmt=1000;
+function selChip(v){
+  spAmt=v;
+  document.querySelectorAll('.sp-chip').forEach(c=>c.classList.toggle('on',String(c.dataset.amt)===String(v)));
+}
+function openSpend(){
+  selChip(1000);
+  $('spamt').value='';$('spnote').value='';
+  $('spbal').textContent=fmtN(poolBal());
+  const a=getSpends().slice().sort((x,y)=>(y.t||0)-(x.t||0)).slice(0,5);
+  $('sphist').innerHTML=a.map(s=>{
+    const d=new Date(s.t||Date.now());
+    return `<div class="sp-hrow"><span class="d">${d.getMonth()+1}/${d.getDate()}</span><span class="n">${esc(s.note||'（无备注）')}</span><span class="a">−${fmtN(s.amt)}</span></div>`;
+  }).join('');
+  $('spendmd').classList.add('show');
+}
+function confirmSpend(){
+  const bal=poolBal();
+  let amt=spAmt==='all'?bal:(+$('spamt').value>0?+$('spamt').value:spAmt);
+  amt=Math.floor(+amt||0);
+  if(amt<=0){toast(bal>0?'请输入金额':'奖励池还是空的 · 黑星攒起');return}
+  if(amt>bal){toast('库存不足 · 当前 '+fmtN(bal));return}
+  const s={id:'s'+Date.now().toString(36)+Math.random().toString(36).slice(2,6),t:Date.now(),amt,note:$('spnote').value.trim()};
+  const a=getSpends();a.push(s);setSpends(a);
+  $('spendmd').classList.remove('show');
+  rPool(true);
+  toast('已扣除 '+fmtN(amt)+' · 剩余 '+fmtN(poolBal()));
+  syncAfterChange();
+}
+
 /* ═══════════ timer (persistent across reload) ═══════════ */
 let TS='idle',TR=FOCUS_SEC,TE=0,TI=null,wakeLock=null;
 const TIMER_KEY='fc_timer';
@@ -1152,7 +1252,8 @@ function evalYes(){
     localStorage.setItem('fc_last',ds(0));
   }
   const up=currentStage(prev).from!==currentStage(next).from;
-  if(up||next>=22){
+  const gain=(next>=BLACK_FROM&&next<=STAR_CAP)?POOL_PER:0;
+  if(up||next>=STAR_CAP){
     celebrate(next,up);
     if(navigator.vibrate){
       const idx=Math.max(0,STAGES.indexOf(currentStage(next)));
@@ -1160,9 +1261,10 @@ function evalYes(){
       navigator.vibrate(up?[...base,80,300]:base);
     }
   }else{
-    miniStar();
+    miniStar(gain);
     if(navigator.vibrate)navigator.vibrate(40);
   }
+  if(gain){rPool(true);toast('黑星一颗 · +'+fmtN(gain)+' 入库')}
   syncAfterChange();
   TR=FOCUS_SEC;
   setTimeout(()=>{
@@ -1183,11 +1285,11 @@ function animCnt(from,to){
 }
 
 /* regular star: quiet nod — float +1, bump the number, road glides on */
-function miniStar(){
+function miniStar(gain){
   const hero=$('hero');
   hero.classList.remove('bump');void hero.offsetWidth;hero.classList.add('bump');
   const f=document.createElement('div');
-  f.className='starfly';f.textContent='+1 ✦';
+  f.className='starfly';f.textContent=gain?'+1 ✦ · +'+gain:'+1 ✦';
   hero.appendChild(f);
   setTimeout(()=>f.remove(),1000);
   setTimeout(()=>hero.classList.remove('bump'),560);
@@ -1261,7 +1363,7 @@ let SYNC_STATE='none',SYNC_TIMER=null,lastPullT=0;
 function collectData(){
   const days={};
   iterDaily((date,v)=>days[date]=v);
-  return{version:1,days,streak:+(localStorage.getItem('fc_streak')||0),last:localStorage.getItem('fc_last')||null};
+  return{version:1,days,streak:+(localStorage.getItem('fc_streak')||0),last:localStorage.getItem('fc_last')||null,spends:getSpends()};
 }
 function applyData(d){
   const keys=[];
@@ -1270,19 +1372,26 @@ function applyData(d){
   for(const[date,count]of Object.entries(d.days||{}))if(count>0)localStorage.setItem('fc_d_'+date,count);
   if(d.streak)localStorage.setItem('fc_streak',d.streak);else localStorage.removeItem('fc_streak');
   if(d.last)localStorage.setItem('fc_last',d.last);else localStorage.removeItem('fc_last');
+  setSpends(Array.isArray(d.spends)?d.spends:[]);
 }
 function mergeData(a,b){
   const days={};
   const all=new Set([...Object.keys(a.days||{}),...Object.keys(b.days||{})]);
   for(const d of all)days[d]=Math.max(+(a.days?.[d]||0),+(b.days?.[d]||0));
   const last=[a.last,b.last].filter(Boolean).sort().pop()||null;
-  return{version:1,days,streak:Math.max(+(a.streak||0),+(b.streak||0)),last};
+  const sm={};
+  for(const s of [...(a.spends||[]),...(b.spends||[])]){
+    if(!s||!s.id)continue;
+    if(!sm[s.id]||(s.t||0)>(sm[s.id].t||0))sm[s.id]=s;
+  }
+  const spends=Object.values(sm).sort((x,y)=>(x.t||0)-(y.t||0));
+  return{version:1,days,streak:Math.max(+(a.streak||0),+(b.streak||0)),last,spends};
 }
 async function cloudFetch(){
   const r=await fetch(SYNC_URL,{cache:'no-store'});
   if(!r.ok)throw new Error('fetch-'+r.status);
   const j=await r.json();
-  return (j&&typeof j==='object')?{version:1,days:j.days||{},streak:+(j.streak||0),last:j.last||null}:{version:1,days:{},streak:0,last:null};
+  return (j&&typeof j==='object')?{version:1,days:j.days||{},streak:+(j.streak||0),last:j.last||null,spends:Array.isArray(j.spends)?j.spends:[]}:{version:1,days:{},streak:0,last:null,spends:[]};
 }
 async function cloudWrite(data){
   const r=await fetch(SYNC_URL,{
@@ -1323,9 +1432,10 @@ async function doSync(){
     const remote=await cloudFetch();
     const merged=mergeData(collectData(),remote);
     applyData(merged);
-    await cloudWrite(merged);
+    /* keep unknown top-level fields alive so older clients can't wipe newer data */
+    await cloudWrite({...remote,...merged});
     lastPullT=Date.now();
-    SYNC_STATE='connected';rSync();rStars();rTimer();
+    SYNC_STATE='connected';rSync();rStars();rPool();rTimer();
   }catch(e){
     console.error('sync failed',e);
     SYNC_STATE='error';rSync();
@@ -1348,9 +1458,23 @@ $('bno').addEventListener('click',evalNo);
 $('sync').addEventListener('click',()=>{if(SYNC_STATE!=='syncing')doSync()});
 $('cb').addEventListener('click',()=>$('cb').classList.remove('show'));
 
+$('bspend').addEventListener('click',openSpend);
+$('bspno').addEventListener('click',()=>$('spendmd').classList.remove('show'));
+$('bspyes').addEventListener('click',confirmSpend);
+$('spchips').addEventListener('click',e=>{
+  const c=e.target.closest('.sp-chip');if(!c)return;
+  $('spamt').value='';
+  selChip(c.dataset.amt==='all'?'all':+c.dataset.amt);
+});
+$('spamt').addEventListener('input',()=>{
+  if($('spamt').value)document.querySelectorAll('.sp-chip').forEach(c=>c.classList.remove('on'));
+});
+$('spendmd').addEventListener('click',e=>{if(e.target===$('spendmd'))$('spendmd').classList.remove('show')});
+
 document.addEventListener('keydown',e=>{
   if(e.key==='Escape'){
     if($('evalmd').classList.contains('show'))evalNo();
+    if($('spendmd').classList.contains('show'))$('spendmd').classList.remove('show');
     return;
   }
   const tag=(document.activeElement&&document.activeElement.tagName)||'';
@@ -1386,7 +1510,7 @@ setInterval(()=>{if(ds(0)!==lastDay){lastDay=ds(0);rStars();rTimer()}},30000);
 /* ═══════════ boot ═══════════ */
 tick();setInterval(tick,10000);
 loadTimer();
-rStars();rTimer();
+rStars();rPool();rTimer();
 initSync();
 
 if('serviceWorker' in navigator){
