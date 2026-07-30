@@ -1,6 +1,6 @@
 /* 我的原则 — service worker
    precache shell → offline-first; bump VERSION to ship updates */
-const VERSION = 'v3.0.0';
+const VERSION = 'v3.1.0';
 const CACHE = 'principles-' + VERSION;
 const SHELL = [
   './',
