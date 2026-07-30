@@ -1,6 +1,6 @@
 /* 我的原则 — service worker
    precache shell → offline-first; bump VERSION to ship updates */
-const VERSION = 'v2.2.0';
+const VERSION = 'v3.0.0';
 const CACHE = 'principles-' + VERSION;
 const SHELL = [
   './',
@@ -25,10 +25,28 @@ self.addEventListener('activate', e => {
   );
 });
 
-/* same-origin GET → stale-while-revalidate; everything else (GitHub API…) untouched */
+/* same-origin GET → stale-while-revalidate
+   Google Fonts → cache-first with background refresh (offline typography)
+   everything else (sync API…) untouched */
 self.addEventListener('fetch', e => {
   const url = new URL(e.request.url);
-  if (e.request.method !== 'GET' || url.origin !== location.origin) return;
+  if (e.request.method !== 'GET') return;
+
+  if (url.hostname === 'fonts.googleapis.com' || url.hostname === 'fonts.gstatic.com') {
+    e.respondWith(
+      caches.open(CACHE).then(async c => {
+        const hit = await c.match(e.request);
+        const fetching = fetch(e.request).then(res => {
+          if (res && res.ok) c.put(e.request, res.clone());
+          return res;
+        }).catch(() => hit);
+        return hit || fetching;
+      })
+    );
+    return;
+  }
+
+  if (url.origin !== location.origin) return;
   e.respondWith(
     caches.match(e.request, { ignoreSearch: true }).then(cached => {
       const fresh = fetch(e.request).then(res => {
