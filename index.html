@@ -202,6 +202,11 @@ b{font-weight:600;color:var(--text)}
 .pool-btn:active{opacity:.55}
 .pool.zero .pool-bal b{color:var(--text3)}
 
+/* notification permission entry under timer */
+.ntf{margin-top:14px;font-size:12px;font-weight:500;color:var(--ac-deep);background:none;border:none;cursor:pointer;font-family:inherit;letter-spacing:.02em;padding:6px 10px;transition:opacity .2s}
+.ntf:active{opacity:.55}
+.ntf.static{color:var(--text3);cursor:default;pointer-events:none}
+
 /* spend sheet */
 .md-spend .md-h b{color:var(--ac-deep);font-size:15px;font-style:normal}
 .sp-chips{display:flex;gap:8px;justify-content:center;margin-bottom:12px}
@@ -504,6 +509,7 @@ footer::before{content:'✦';display:block;color:var(--ac);opacity:.4;font-size:
         <button class="btn btn-p" id="bresume" style="display:none">继续</button>
         <button class="btn btn-d" id="bcancel" style="display:none">放弃</button>
       </div>
+      <button class="ntf" id="bntf" style="display:none">开启 Mac 通知 · 到点提醒你</button>
     </div>
 
     </div><!-- /col 1 -->
@@ -1222,13 +1228,26 @@ function finishChime(){
   }catch(e){}
 }
 function askNotifyPerm(){
-  try{if('Notification' in window&&Notification.permission==='default')Notification.requestPermission()}catch(e){}
+  try{if('Notification' in window&&Notification.permission==='default')Notification.requestPermission().then(rNtf)}catch(e){}
 }
+/* permission entry: renders by current state, never fails silently */
+function rNtf(){
+  const el=$('bntf');
+  if(!('Notification' in window)){
+    el.style.display='';el.className='ntf static';el.textContent='当前浏览器不支持系统通知';return;
+  }
+  const p=Notification.permission;
+  if(p==='granted'){el.style.display='none';return}
+  el.style.display='';
+  if(p==='default'){el.className='ntf';el.textContent='开启 Mac 通知 · 到点提醒你'}
+  else{el.className='ntf static';el.textContent='通知被系统拒绝 · 需在浏览器设置中开启'}
+}
+/* fires on natural timer end only — foreground AND background */
 function notifyDone(){
   try{
-    if('Notification' in window&&Notification.permission==='granted'&&document.visibilityState!=='visible'){
-      new Notification('✦ 25 分钟到',{body:'是否全力以赴做了正确的事？回来诚实自评。',tag:'fc-done'});
-    }
+    if(!('Notification' in window)||Notification.permission!=='granted')return;
+    const n=new Notification('✦ 25 分钟完成',{body:'是否全力以赴做了正确的事？点我回去自评',tag:'fc-done',silent:false});
+    n.onclick=()=>{try{window.focus()}catch(e){}};
   }catch(e){}
 }
 
@@ -1470,6 +1489,13 @@ $('spamt').addEventListener('input',()=>{
   if($('spamt').value)document.querySelectorAll('.sp-chip').forEach(c=>c.classList.remove('on'));
 });
 $('spendmd').addEventListener('click',e=>{if(e.target===$('spendmd'))$('spendmd').classList.remove('show')});
+$('bntf').addEventListener('click',async()=>{
+  try{
+    const p=await Notification.requestPermission();
+    rNtf();
+    if(p==='granted')toast('已开启 · 到点会通知你');
+  }catch(e){}
+});
 
 document.addEventListener('keydown',e=>{
   if(e.key==='Escape'){
@@ -1510,7 +1536,7 @@ setInterval(()=>{if(ds(0)!==lastDay){lastDay=ds(0);rStars();rTimer()}},30000);
 /* ═══════════ boot ═══════════ */
 tick();setInterval(tick,10000);
 loadTimer();
-rStars();rPool();rTimer();
+rStars();rPool();rTimer();rNtf();
 initSync();
 
 if('serviceWorker' in navigator){
