@@ -1,6 +1,6 @@
 /* 我的原则 — service worker
    precache shell → offline-first; bump VERSION to ship updates */
-const VERSION = 'v3.4.0';
+const VERSION = 'v3.4.1-kb';
 const CACHE = 'principles-' + VERSION;
 const SHELL = [
   './',
@@ -47,6 +47,17 @@ self.addEventListener('fetch', e => {
   }
 
   if (url.origin !== location.origin) return;
+
+  /* kanban.html 每次发布都变 → network-first,离线回退缓存 */
+  if (url.pathname.endsWith('/kanban.html')) {
+    e.respondWith(
+      fetch(e.request).then(res => {
+        if (res && res.ok) { const clone = res.clone(); caches.open(CACHE).then(c => c.put(e.request, clone)); }
+        return res;
+      }).catch(() => caches.match(e.request, { ignoreSearch: true }))
+    );
+    return;
+  }
   e.respondWith(
     caches.match(e.request, { ignoreSearch: true }).then(cached => {
       const fresh = fetch(e.request).then(res => {
