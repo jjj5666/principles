@@ -64,9 +64,18 @@ const ITER = 600000;
 const b64 = s => Uint8Array.from(atob(s), c => c.charCodeAt(0));
 
 async function fetchPayload(){
-  const res = await fetch('/kanban/payload.txt?t=' + Date.now(), {cache: 'no-store'});
-  if(!res.ok) throw new Error('fetch');
-  return (await res.text()).trim();
+  // 双路:同源(最新)→ jsDelivr CDN(境内可达性好;发布时主动 purge,滞后通常在分钟级)
+  const urls = [
+    '/kanban/payload.txt?t=' + Date.now(),
+    'https://cdn.jsdelivr.net/gh/jjj5666/kanban@main/payload.txt?t=' + Date.now()
+  ];
+  for (const u of urls){
+    try{
+      const res = await fetch(u, {cache: 'no-store'});
+      if(res.ok) return (await res.text()).trim();
+    }catch(err){}
+  }
+  throw new Error('fetch');
 }
 
 async function decrypt(pass){
